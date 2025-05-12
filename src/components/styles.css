@@ -1,0 +1,79 @@
+/* src/components/DocumentViewer.css */
+.document-viewer-container {
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 20px auto;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .dropzone {
+    border: 2px dashed #cccccc;
+    border-radius: 4px;
+    padding: 60px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .dropzone.active {
+    border-color: #2196f3;
+    background-color: #f5f9ff;
+  }
+  
+  .dropzone p {
+    margin: 10px 0;
+    color: #666;
+  }
+  
+  .viewer-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .toolbar {
+    margin-bottom: 15px;
+  }
+  
+  .toolbar button {
+    padding: 8px 16px;
+    margin-right: 10px;
+    background-color: #4a89dc;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .toolbar button:hover {
+    background-color: #3b7dd8;
+  }
+  
+  .toolbar button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+  
+  .document-container {
+    border: 1px solid #eee;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  
+  .pdf-viewer {
+    overflow-y: auto;
+    max-height: 700px;
+  }
+  
+  .office-viewer {
+    width: 100%;
+  }
+  
+  .unsupported-message {
+    padding: 40px;
+    text-align: center;
+    color: #ff5252;
+  }

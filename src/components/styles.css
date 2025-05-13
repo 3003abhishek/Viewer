@@ -162,3 +162,8 @@
   background: rgba(0, 0, 255, 0.3);
 }
 
+.pdf-page.editing-mode .textLayer span {
+  color: transparent;
+}
+
+

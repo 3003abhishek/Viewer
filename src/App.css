@@ -1,0 +1,26 @@
+.pdf-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-top: 20px;
+  }
+  
+  canvas {
+    border: 1px solid #ccc;
+  }
+  
+  .text-box {
+    position: absolute;
+    width: 100%;
+    left: 0;
+    min-height: 20px;
+    padding: 2px 8px;
+    border: none;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: text;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    outline: none;
+    white-space: pre-wrap;
+    box-sizing: border-box;
+  }
+  

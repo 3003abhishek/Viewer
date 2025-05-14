@@ -1,14 +1,12 @@
+import React from 'react';
+import  PDFViewer  from './components/DocumentViewer';
 
-import './App.css';
-import DocumentViewer from './components/DocumentViewer';
-
-function App() {
+const App: React.FC = () => {
   return (
-    <div className="App">
-      <h1>Document Viewer Widget</h1>
-      <DocumentViewer />
+    <div>
+      <h1>PDF Viewer</h1>
+      <PDFViewer />
     </div>
   );
 }
-
 export default App;

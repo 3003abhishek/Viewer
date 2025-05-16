@@ -16,7 +16,7 @@ interface TextItem {
   originalY: number;
   transform: number[];
   pageHeight: number;
-  modified?: boolean; // Track if this text item has been modified
+  modified?: boolean; 
 }
 
 const PDFEditor: React.FC = () => {
@@ -28,9 +28,8 @@ const PDFEditor: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Use ref to store PDF bytes for consistent access
+ 
   const pdfBytesRef = useRef<Uint8Array | null>(null);
-  // Store original text positions to maintain correct ordering
   const [originalTextPositions, setOriginalTextPositions] = useState<any[]>([]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,23 +48,22 @@ const PDFEditor: React.FC = () => {
     setError(null);
 
     try {
-      // Clear existing data first
+      
       setTextItems([]);
       setPdfDimensions({ width: 0, height: 0 });
       pdfBytesRef.current = null;
       setOriginalPdfBytes(null);
       setOriginalTextPositions([]);
       
-      // Read the file as an ArrayBuffer
+      
       const arrayBuffer = await file.arrayBuffer();
       console.log('ArrayBuffer size:', arrayBuffer.byteLength);
       
-      // Create a copy of the buffer to prevent detachment issues
+     
       const bufferCopy = arrayBuffer.slice(0);
       const typedArray = new Uint8Array(bufferCopy);
       console.log('TypedArray created with length:', typedArray.length);
-      
-      // Check if the file is actually a PDF (should start with %PDF-)
+     
       let firstFiveBytes;
       try {
         firstFiveBytes = new TextDecoder().decode(typedArray.slice(0, 5));
@@ -79,7 +77,7 @@ const PDFEditor: React.FC = () => {
         throw new Error('Invalid PDF format - missing PDF signature');
       }
       
-      // Store in both state and ref for reliability - make another copy to be safe
+      
       const finalCopy = new Uint8Array(typedArray.length);
       finalCopy.set(typedArray);
       
@@ -89,7 +87,7 @@ const PDFEditor: React.FC = () => {
       console.log('PDF bytes set, size:', finalCopy.length);
       console.log('pdfBytesRef value:', pdfBytesRef.current ? pdfBytesRef.current.length : 'null');
 
-      // Load the PDF for display
+     
       const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
       console.log('PDF loaded:', pdf);
 
@@ -115,16 +113,15 @@ const PDFEditor: React.FC = () => {
       const textContent = await page.getTextContent();
       console.log('Text content items:', textContent.items.length);
       
-      // Store original positions for correct order when saving
+      
       const originalPositions = textContent.items.map((item: any, index: number) => ({
         index,
-        transform: [...item.transform],  // Clone to prevent reference issues
+        transform: [...item.transform], 
         str: item.str
       }));
       
-      // Sort by vertical position (top to bottom)
+      
       originalPositions.sort((a: any, b: any) => {
-        // PDF coordinates have origin at bottom-left, larger Y means higher on the page
         return b.transform[5] - a.transform[5];
       });
       
@@ -145,9 +142,9 @@ const PDFEditor: React.FC = () => {
           height: item.height * scale,
           originalX: transform[4],
           originalY: transform[5],
-          transform: [...transform],  // Clone to prevent reference issues
+          transform: [...transform],  
           pageHeight: viewport.height / scale,
-          modified: false, // Initially not modified
+          modified: false,
         };
       });
 
@@ -161,7 +158,7 @@ const PDFEditor: React.FC = () => {
     } catch (err) {
       console.error('Error processing PDF:', err);
       setError(`Failed to load PDF: ${err instanceof Error ? err.message : 'Unknown error'}`);
-      // Reset state on error
+     
       pdfBytesRef.current = null;
       setOriginalPdfBytes(null);
     } finally {
@@ -173,7 +170,7 @@ const PDFEditor: React.FC = () => {
     setTextItems(prevItems =>
       prevItems.map((item, i) => 
         i === index 
-          ? { ...item, str: newText, modified: true } // Mark as modified when changed
+          ? { ...item, str: newText, modified: true }
           : item
       )
     );
@@ -185,7 +182,6 @@ const PDFEditor: React.FC = () => {
 
   const handleTextBlur = (index: number, e: React.FocusEvent<HTMLDivElement>) => {
     const newText = e.currentTarget.textContent || '';
-    // Only mark as modified if the text actually changed
     if (textItems[index].str !== newText) {
       handleTextChange(index, newText);
     }
@@ -194,7 +190,7 @@ const PDFEditor: React.FC = () => {
 
   const downloadModifiedPdf = async () => {
     console.log('Downloading modified PDF...');
-    // Always access the ref value directly for consistency
+   
     const pdfBytes = pdfBytesRef.current;
     
     if (!pdfBytes || pdfBytes.length === 0) {
@@ -202,7 +198,6 @@ const PDFEditor: React.FC = () => {
       return;
     }
     
-    // Make a copy of the PDF bytes to prevent detached ArrayBuffer issues
     const pdfBytesCopy = new Uint8Array(pdfBytes.length);
     try {
       pdfBytesCopy.set(pdfBytes);
@@ -213,10 +208,8 @@ const PDFEditor: React.FC = () => {
       return;
     }
     
-    // Add more detailed debugging
     console.log('PDF bytes length:', pdfBytesCopy.length);
     
-    // Verify PDF signature (PDF files start with %PDF-)
     let firstFiveBytes;
     try {
       firstFiveBytes = new TextDecoder().decode(pdfBytesCopy.slice(0, 5));
@@ -254,7 +247,6 @@ const PDFEditor: React.FC = () => {
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       console.log('Font embedded');
       
-      // Create a white background to clear existing content
       firstPage.drawRectangle({
         x: 0,
         y: 0,
@@ -263,7 +255,6 @@ const PDFEditor: React.FC = () => {
         color: rgb(1, 1, 1), // White
       });
   
-      // Create a map of original indices to updated text content
       const updatedTextMap = textItems.reduce((map, item, index) => {
         map[index] = item.str;
         return map;
@@ -271,21 +262,18 @@ const PDFEditor: React.FC = () => {
       
       console.log('Modified items:', textItems.filter(item => item.modified).length);
       
-      // Draw text items in the original order from top to bottom
+     
       for (const origItem of originalTextPositions) {
         const index = origItem.index;
         const originalText = origItem.str;
         const currentText = updatedTextMap[index] || originalText;
-        
-        // Get the original position
+       
         const origTransform = origItem.transform;
         const x = origTransform[4];
-        
-        // In PDF coordinates, y=0 is at the bottom
-        // We need to keep the original y position to maintain correct ordering
+       
         const y = origTransform[5];
         
-        // Extract font size from transform matrix
+        
         const fontSize = Math.abs(origTransform[3]);
         
         console.log(`Drawing text "${currentText}" at ${x}, ${y} (original position)`);
@@ -312,7 +300,7 @@ const PDFEditor: React.FC = () => {
   };
   
   const handleDownloadPdf = () => {
-    // Always access the ref value directly for consistency
+   
     const pdfBytes = pdfBytesRef.current;
     
     if (!pdfBytes || pdfBytes.length === 0) {
@@ -320,7 +308,6 @@ const PDFEditor: React.FC = () => {
       return;
     }
     
-    // Make a copy of the PDF bytes to prevent detached ArrayBuffer issues
     let pdfBytesCopy;
     try {
       pdfBytesCopy = new Uint8Array(pdfBytes.length);
@@ -332,7 +319,6 @@ const PDFEditor: React.FC = () => {
       return;
     }
     
-    // Verify PDF signature again
     let firstFiveBytes;
     try {
       firstFiveBytes = new TextDecoder().decode(pdfBytesCopy.slice(0, 5));

@@ -1,11 +1,113 @@
 /* styles.css */
-
+body{
+  padding: 0;
+  margin: 0 ;
+}
 /* Main container */
 .pdf-editor-container {
-  padding: 2rem;
+  /* padding: 2rem;
+  
   max-width: 1200px;
-  margin: 0 auto;
+  margin: 0 auto; */
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.banner_section {
+  width: 100vw;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-image: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%);
+  border-radius:  0  0 20px 20px;
+  padding: 20px 0;
+}
+.download_buttons{ 
+  display: flex;
+  gap: 10px ;
+ 
+}
+.download_buttons button{
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  color: rgb(0, 0, 0);
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 100px;
+}
+/* File Upload Container */
+.file-upload-container {
+  margin: 20px 0;
+}
+
+/* Hide the default file input */
+.file-upload-box input[type="file"] {
+  display: none;
+}
+
+/* Style the custom upload area */
+.file-upload-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 10px;
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Hover and focus states */
+.file-upload-box:hover,
+.file-upload-box:focus-within {
+  border-color: #4a90e2;
+  background-color: #f0f7ff;
+}
+
+/* Upload icon */
+.upload-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+  color: #4a90e2;
+}
+
+/* Main text */
+.upload-text {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+/* Hint text */
+.upload-hint {
+  font-size: 14px;
+  color: #666;
+}
+
+/* Disabled state */
+.file-upload-box input[type="file"]:disabled + .upload-icon,
+.file-upload-box input[type="file"]:disabled ~ .upload-text,
+.file-upload-box input[type="file"]:disabled ~ .upload-hint {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* For when a file is selected (you can add this class via JavaScript) */
+.file-upload-box.has-file {
+  border-color: #2ecc71;
+  background-color: #f0fff4;
+}
+
+.file-upload-box.has-file .upload-icon {
+  color: #2ecc71;
 }
 
 /* Title */

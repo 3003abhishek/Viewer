@@ -16,7 +16,7 @@ interface TextItem {
   originalY: number;
   transform: number[];
   pageHeight: number;
-  modified?: boolean; 
+  modified?: boolean;
 }
 
 const PDFEditor: React.FC = () => {
@@ -27,8 +27,8 @@ const PDFEditor: React.FC = () => {
   const [originalPdfBytes, setOriginalPdfBytes] = useState<Uint8Array | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
- 
+
+
   const pdfBytesRef = useRef<Uint8Array | null>(null);
   const [originalTextPositions, setOriginalTextPositions] = useState<any[]>([]);
 
@@ -48,22 +48,22 @@ const PDFEditor: React.FC = () => {
     setError(null);
 
     try {
-      
+
       setTextItems([]);
       setPdfDimensions({ width: 0, height: 0 });
       pdfBytesRef.current = null;
       setOriginalPdfBytes(null);
       setOriginalTextPositions([]);
-      
-      
+
+
       const arrayBuffer = await file.arrayBuffer();
       console.log('ArrayBuffer size:', arrayBuffer.byteLength);
-      
-     
+
+
       const bufferCopy = arrayBuffer.slice(0);
       const typedArray = new Uint8Array(bufferCopy);
       console.log('TypedArray created with length:', typedArray.length);
-     
+
       let firstFiveBytes;
       try {
         firstFiveBytes = new TextDecoder().decode(typedArray.slice(0, 5));
@@ -72,22 +72,22 @@ const PDFEditor: React.FC = () => {
         console.error('Error decoding first bytes:', e);
         firstFiveBytes = '';
       }
-      
+
       if (firstFiveBytes !== '%PDF-') {
         throw new Error('Invalid PDF format - missing PDF signature');
       }
-      
-      
+
+
       const finalCopy = new Uint8Array(typedArray.length);
       finalCopy.set(typedArray);
-      
+
       pdfBytesRef.current = finalCopy;
       setOriginalPdfBytes(finalCopy);
-      
+
       console.log('PDF bytes set, size:', finalCopy.length);
       console.log('pdfBytesRef value:', pdfBytesRef.current ? pdfBytesRef.current.length : 'null');
 
-     
+
       const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
       console.log('PDF loaded:', pdf);
 
@@ -112,21 +112,21 @@ const PDFEditor: React.FC = () => {
 
       const textContent = await page.getTextContent();
       console.log('Text content items:', textContent.items.length);
-      
-      
+
+
       const originalPositions = textContent.items.map((item: any, index: number) => ({
         index,
-        transform: [...item.transform], 
+        transform: [...item.transform],
         str: item.str
       }));
-      
-      
+
+
       originalPositions.sort((a: any, b: any) => {
         return b.transform[5] - a.transform[5];
       });
-      
+
       setOriginalTextPositions(originalPositions);
-      
+
       const items: TextItem[] = textContent.items.map((item: any) => {
         const transform = item.transform;
         const x = transform[4] * scale;
@@ -142,7 +142,7 @@ const PDFEditor: React.FC = () => {
           height: item.height * scale,
           originalX: transform[4],
           originalY: transform[5],
-          transform: [...transform],  
+          transform: [...transform],
           pageHeight: viewport.height / scale,
           modified: false,
         };
@@ -158,7 +158,7 @@ const PDFEditor: React.FC = () => {
     } catch (err) {
       console.error('Error processing PDF:', err);
       setError(`Failed to load PDF: ${err instanceof Error ? err.message : 'Unknown error'}`);
-     
+
       pdfBytesRef.current = null;
       setOriginalPdfBytes(null);
     } finally {
@@ -168,8 +168,8 @@ const PDFEditor: React.FC = () => {
 
   const handleTextChange = (index: number, newText: string) => {
     setTextItems(prevItems =>
-      prevItems.map((item, i) => 
-        i === index 
+      prevItems.map((item, i) =>
+        i === index
           ? { ...item, str: newText, modified: true }
           : item
       )
@@ -177,7 +177,7 @@ const PDFEditor: React.FC = () => {
   };
 
   const handleTextFocus = (index: number) => {
-    setSelectedIndex(index);  
+    setSelectedIndex(index);
   };
 
   const handleTextBlur = (index: number, e: React.FocusEvent<HTMLDivElement>) => {
@@ -190,14 +190,14 @@ const PDFEditor: React.FC = () => {
 
   const downloadModifiedPdf = async () => {
     console.log('Downloading modified PDF...');
-   
+
     const pdfBytes = pdfBytesRef.current;
-    
+
     if (!pdfBytes || pdfBytes.length === 0) {
       setError('No PDF data to modify');
       return;
     }
-    
+
     const pdfBytesCopy = new Uint8Array(pdfBytes.length);
     try {
       pdfBytesCopy.set(pdfBytes);
@@ -207,9 +207,9 @@ const PDFEditor: React.FC = () => {
       setError('Failed to process PDF: ArrayBuffer might be detached');
       return;
     }
-    
+
     console.log('PDF bytes length:', pdfBytesCopy.length);
-    
+
     let firstFiveBytes;
     try {
       firstFiveBytes = new TextDecoder().decode(pdfBytesCopy.slice(0, 5));
@@ -219,34 +219,34 @@ const PDFEditor: React.FC = () => {
       setError('Failed to verify PDF: ArrayBuffer might be detached');
       return;
     }
-    
+
     if (firstFiveBytes !== '%PDF-') {
       setError('Invalid PDF format - missing PDF signature');
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
-  
+
     try {
       console.log('Loading PDF document with valid bytes...');
       const pdfDoc = await PDFDocument.load(pdfBytesCopy);
       console.log('PDF document loaded successfully');
-      
+
       const pages = pdfDoc.getPages();
       console.log('Number of pages:', pages.length);
-      
+
       if (pages.length === 0) {
         throw new Error('PDF has no pages');
       }
-      
+
       const firstPage = pages[0];
       const { width: pageWidth, height: pageHeight } = firstPage.getSize();
       console.log('Page dimensions:', pageWidth, 'x', pageHeight);
-  
+
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       console.log('Font embedded');
-      
+
       firstPage.drawRectangle({
         x: 0,
         y: 0,
@@ -254,30 +254,30 @@ const PDFEditor: React.FC = () => {
         height: pageHeight,
         color: rgb(1, 1, 1), // White
       });
-  
+
       const updatedTextMap = textItems.reduce((map, item, index) => {
         map[index] = item.str;
         return map;
-      }, {} as {[key: number]: string});
-      
+      }, {} as { [key: number]: string });
+
       console.log('Modified items:', textItems.filter(item => item.modified).length);
-      
-     
+
+
       for (const origItem of originalTextPositions) {
         const index = origItem.index;
         const originalText = origItem.str;
         const currentText = updatedTextMap[index] || originalText;
-       
+
         const origTransform = origItem.transform;
         const x = origTransform[4];
-       
+
         const y = origTransform[5];
-        
-        
+
+
         const fontSize = Math.abs(origTransform[3]);
-        
+
         console.log(`Drawing text "${currentText}" at ${x}, ${y} (original position)`);
-  
+
         firstPage.drawText(currentText, {
           x: x,
           y: y,
@@ -286,7 +286,7 @@ const PDFEditor: React.FC = () => {
           color: rgb(0, 0, 0),
         });
       }
-  
+
       console.log('Saving modified PDF...');
       const modifiedPdfBytes = await pdfDoc.save();
       console.log('Modified PDF size:', modifiedPdfBytes.length);
@@ -298,16 +298,16 @@ const PDFEditor: React.FC = () => {
       setIsLoading(false);
     }
   };
-  
+
   const handleDownloadPdf = () => {
-   
+
     const pdfBytes = pdfBytesRef.current;
-    
+
     if (!pdfBytes || pdfBytes.length === 0) {
       setError('No PDF data to download');
       return;
     }
-    
+
     let pdfBytesCopy;
     try {
       pdfBytesCopy = new Uint8Array(pdfBytes.length);
@@ -318,7 +318,7 @@ const PDFEditor: React.FC = () => {
       setError('Failed to download PDF: ArrayBuffer might be detached');
       return;
     }
-    
+
     let firstFiveBytes;
     try {
       firstFiveBytes = new TextDecoder().decode(pdfBytesCopy.slice(0, 5));
@@ -328,12 +328,12 @@ const PDFEditor: React.FC = () => {
       setError('Failed to verify PDF for download: ArrayBuffer might be detached');
       return;
     }
-  
+
     if (firstFiveBytes !== '%PDF-') {
       setError('Invalid PDF format for download - missing PDF signature');
       return;
     }
-    
+
     const blob = new Blob([pdfBytesCopy], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -344,7 +344,7 @@ const PDFEditor: React.FC = () => {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-  
+
   const downloadBlob = (data: Uint8Array, fileName: string) => {
     try {
       const blob = new Blob([data], { type: 'application/pdf' });
@@ -364,40 +364,52 @@ const PDFEditor: React.FC = () => {
     }
   };
 
-     return (
+  return (
     <div className="pdf-editor-container">
-      <h2 className="pdf-editor-title">Editable PDF Viewer</h2>
-      <input
-        type="file"
-        accept="application/pdf"
-        onChange={handleFileUpload}
-        className="pdf-file-upload"
-        disabled={isLoading}
-      />
-
-      {error && (
-        <div className="pdf-error-message">
-          {error}
+      <div className='banner_section'>
+        <h2 className="pdf-editor-title">Editable PDF Viewer</h2>
+        <div className="file-upload-container">
+          <label className="file-upload-box">
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={handleFileUpload}
+              className="pdf-file-upload"
+              disabled={isLoading}
+            />
+            <span className="upload-icon">📄</span>
+            <span className="upload-text">Choose PDF file or drag here</span>
+            <span className="upload-hint">PDF files only</span>
+          </label>
         </div>
-      )}
+
+        {error && (
+          <div className="pdf-error-message">
+            {error}
+          </div>
+        )}
+        <div className='download_buttons'>
+          <button
+            onClick={downloadModifiedPdf}
+            disabled={!pdfBytesRef.current || isLoading || textItems.length === 0}
+            className={`pdf-button pdf-button-success ${isLoading ? 'pdf-button-loading' : ''}`}
+          >
+            {isLoading ? 'Processing...' : 'Download Modified PDF'}
+          </button>
+
+          <button
+            onClick={handleDownloadPdf}
+            disabled={!pdfBytesRef.current}
+            className="pdf-button pdf-button-primary"
+          >
+            Download Original PDF
+          </button>
+        </div>
+      </div>
 
       <div className="pdf-button-container">
-        <button
-          onClick={downloadModifiedPdf}
-          disabled={!pdfBytesRef.current || isLoading || textItems.length === 0}
-          className={`pdf-button pdf-button-success ${isLoading ? 'pdf-button-loading' : ''}`}
-        >
-          {isLoading ? 'Processing...' : 'Download Modified PDF'}
-        </button>
 
-        <button 
-          onClick={handleDownloadPdf} 
-          disabled={!pdfBytesRef.current}
-          className="pdf-button pdf-button-primary"
-        >
-          Download Original PDF
-        </button>
-        
+
         {textItems.filter(item => item.modified).length > 0 && (
           <div className="pdf-modified-indicator">
             {textItems.filter(item => item.modified).length} text items modified

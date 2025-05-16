@@ -1,7 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import "./styles.css"
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
 
@@ -16,7 +15,6 @@ interface TextItem {
   originalY: number;
   transform: number[];
   pageHeight: number;
-  modified?: boolean; // Track if this text item has been modified
 }
 
 const PDFEditor: React.FC = () => {
@@ -30,8 +28,6 @@ const PDFEditor: React.FC = () => {
   
   // Use ref to store PDF bytes for consistent access
   const pdfBytesRef = useRef<Uint8Array | null>(null);
-  // Store original text positions to maintain correct ordering
-  const [originalTextPositions, setOriginalTextPositions] = useState<any[]>([]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -54,7 +50,6 @@ const PDFEditor: React.FC = () => {
       setPdfDimensions({ width: 0, height: 0 });
       pdfBytesRef.current = null;
       setOriginalPdfBytes(null);
-      setOriginalTextPositions([]);
       
       // Read the file as an ArrayBuffer
       const arrayBuffer = await file.arrayBuffer();
@@ -115,21 +110,6 @@ const PDFEditor: React.FC = () => {
       const textContent = await page.getTextContent();
       console.log('Text content items:', textContent.items.length);
       
-      // Store original positions for correct order when saving
-      const originalPositions = textContent.items.map((item: any, index: number) => ({
-        index,
-        transform: [...item.transform],  // Clone to prevent reference issues
-        str: item.str
-      }));
-      
-      // Sort by vertical position (top to bottom)
-      originalPositions.sort((a: any, b: any) => {
-        // PDF coordinates have origin at bottom-left, larger Y means higher on the page
-        return b.transform[5] - a.transform[5];
-      });
-      
-      setOriginalTextPositions(originalPositions);
-      
       const items: TextItem[] = textContent.items.map((item: any) => {
         const transform = item.transform;
         const x = transform[4] * scale;
@@ -145,9 +125,8 @@ const PDFEditor: React.FC = () => {
           height: item.height * scale,
           originalX: transform[4],
           originalY: transform[5],
-          transform: [...transform],  // Clone to prevent reference issues
+          transform: item.transform,
           pageHeight: viewport.height / scale,
-          modified: false, // Initially not modified
         };
       });
 
@@ -171,11 +150,7 @@ const PDFEditor: React.FC = () => {
 
   const handleTextChange = (index: number, newText: string) => {
     setTextItems(prevItems =>
-      prevItems.map((item, i) => 
-        i === index 
-          ? { ...item, str: newText, modified: true } // Mark as modified when changed
-          : item
-      )
+      prevItems.map((item, i) => (i === index ? { ...item, str: newText } : item))
     );
   };
 
@@ -184,11 +159,7 @@ const PDFEditor: React.FC = () => {
   };
 
   const handleTextBlur = (index: number, e: React.FocusEvent<HTMLDivElement>) => {
-    const newText = e.currentTarget.textContent || '';
-    // Only mark as modified if the text actually changed
-    if (textItems[index].str !== newText) {
-      handleTextChange(index, newText);
-    }
+    handleTextChange(index, e.currentTarget.textContent || '');
     setSelectedIndex(null);
   };
 
@@ -253,47 +224,18 @@ const PDFEditor: React.FC = () => {
   
       const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
       console.log('Font embedded');
-      
-      // Create a white background to clear existing content
-      firstPage.drawRectangle({
-        x: 0,
-        y: 0,
-        width: pageWidth,
-        height: pageHeight,
-        color: rgb(1, 1, 1), // White
-      });
   
-      // Create a map of original indices to updated text content
-      const updatedTextMap = textItems.reduce((map, item, index) => {
-        map[index] = item.str;
-        return map;
-      }, {} as {[key: number]: string});
+      // Debug text items
+      console.log('Text items to write:', textItems.length);
       
-      console.log('Modified items:', textItems.filter(item => item.modified).length);
-      
-      // Draw text items in the original order from top to bottom
-      for (const origItem of originalTextPositions) {
-        const index = origItem.index;
-        const originalText = origItem.str;
-        const currentText = updatedTextMap[index] || originalText;
-        
-        // Get the original position
-        const origTransform = origItem.transform;
-        const x = origTransform[4];
-        
-        // In PDF coordinates, y=0 is at the bottom
-        // We need to keep the original y position to maintain correct ordering
-        const y = origTransform[5];
-        
-        // Extract font size from transform matrix
-        const fontSize = Math.abs(origTransform[3]);
-        
-        console.log(`Drawing text "${currentText}" at ${x}, ${y} (original position)`);
+      for (const item of textItems) {
+        const yPos = pageHeight - item.originalY - (item.fontSize / 1.5); // Adjusted position
+        console.log(`Drawing text "${item.str}" at ${item.originalX}, ${yPos}`);
   
-        firstPage.drawText(currentText, {
-          x: x,
-          y: y,
-          size: fontSize,
+        firstPage.drawText(item.str, {
+          x: item.originalX,
+          y: yPos,
+          size: item.fontSize / 1.5,
           font: font,
           color: rgb(0, 0, 0),
         });
@@ -378,28 +320,35 @@ const PDFEditor: React.FC = () => {
     }
   };
 
-     return (
-    <div className="pdf-editor-container">
-      <h2 className="pdf-editor-title">Editable PDF Viewer</h2>
+  return (
+    <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
+      <h2>Editable PDF Viewer</h2>
       <input
         type="file"
         accept="application/pdf"
         onChange={handleFileUpload}
-        className="pdf-file-upload"
+        style={{ marginBottom: '20px' }}
         disabled={isLoading}
       />
 
       {error && (
-        <div className="pdf-error-message">
+        <div style={{ color: 'red', marginBottom: '20px' }}>
           {error}
         </div>
       )}
 
-      <div className="pdf-button-container">
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button
           onClick={downloadModifiedPdf}
           disabled={!pdfBytesRef.current || isLoading || textItems.length === 0}
-          className={`pdf-button pdf-button-success ${isLoading ? 'pdf-button-loading' : ''}`}
+          style={{
+            padding: '8px 16px',
+            backgroundColor: pdfBytesRef.current && textItems.length > 0 ? '#4CAF50' : '#cccccc',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: pdfBytesRef.current && textItems.length > 0 ? 'pointer' : 'not-allowed',
+          }}
         >
           {isLoading ? 'Processing...' : 'Download Modified PDF'}
         </button>
@@ -407,31 +356,44 @@ const PDFEditor: React.FC = () => {
         <button 
           onClick={handleDownloadPdf} 
           disabled={!pdfBytesRef.current}
-          className="pdf-button pdf-button-primary"
+          style={{
+            padding: '8px 16px',
+            backgroundColor: pdfBytesRef.current ? '#2196F3' : '#cccccc',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: pdfBytesRef.current ? 'pointer' : 'not-allowed',
+          }}
         >
           Download Original PDF
         </button>
-        
-        {textItems.filter(item => item.modified).length > 0 && (
-          <div className="pdf-modified-indicator">
-            {textItems.filter(item => item.modified).length} text items modified
-          </div>
-        )}
       </div>
 
-      {isLoading && <div className="pdf-loading">Loading PDF...</div>}
+      {isLoading && <div>Loading PDF...</div>}
 
       <div
-        className="pdf-viewer-container"
         style={{
+          position: 'relative',
+          margin: '0 auto',
           width: `${pdfDimensions.width}px`,
           height: `${pdfDimensions.height}px`,
+          border: '1px solid #ddd',
+          backgroundColor: '#f9f9f9',
           display: pdfBytesRef.current ? 'block' : 'none',
         }}
       >
         <canvas
           ref={canvasRef}
-          className="pdf-canvas"
+          style={{
+            position: 'fixed',
+            top: '-9999px',
+            left: '-9999px',
+            width: 0,
+            height: 0,
+            overflow: 'hidden',
+            pointerEvents: 'none',
+            opacity: 0,
+          }}
         />
 
         {textItems.map((item, index) => (
@@ -439,17 +401,22 @@ const PDFEditor: React.FC = () => {
             key={index}
             contentEditable
             suppressContentEditableWarning
-            className={`
-              pdf-editable-text 
-              ${selectedIndex === index ? 'pdf-editable-text-selected' : ''}
-              ${item.modified ? 'pdf-editable-text-modified' : ''}
-            `}
             style={{
+              position: 'absolute',
               top: `${item.y}px`,
               left: `${item.x}px`,
               fontSize: `${item.fontSize}px`,
+              fontFamily: 'sans-serif',
+              color: '#000',
+              whiteSpace: 'pre',
+              lineHeight: 1,
               minWidth: `${item.width}px`,
               minHeight: `${item.height}px`,
+              padding: '2px',
+              outline: 'none',
+              backgroundColor: selectedIndex === index ? 'rgba(255,255,0,0.3)' : 'transparent',
+              border: selectedIndex === index ? '1px dashed #0066ff' : 'none',
+              cursor: 'text',
             }}
             onFocus={() => handleTextFocus(index)}
             onBlur={(e) => handleTextBlur(index, e)}

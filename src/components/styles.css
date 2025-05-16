@@ -1,196 +1,145 @@
+/* styles.css */
+
+/* Main container */
 .pdf-editor-container {
-  font-family: Arial, sans-serif;
+  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-.dropzone {
-  border: 2px dashed #cccccc;
-  border-radius: 5px;
-  padding: 40px;
-  text-align: center;
+/* Title */
+.pdf-editor-title {
+  color: #2c3e50;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+/* File upload */
+.pdf-file-upload {
+  margin-bottom: 1.5rem;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+}
+
+/* Error message */
+.pdf-error-message {
+  color: #e74c3c;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background-color: #fdecea;
+  border-radius: 4px;
+  border-left: 4px solid #e74c3c;
+}
+
+/* Button container */
+.pdf-button-container {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+/* Base button style */
+.pdf-button {
+  padding: 0.5rem 1rem;
+  color: white;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: #fafafa;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.dropzone.active {
-  border-color: #2196F3;
-  background-color: #f0f7ff;
+.pdf-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
-.dropzone p {
-  margin: 0;
-  font-size: 16px;
-  color: #666;
+.pdf-button:disabled {
+  background-color: #cccccc !important;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.editor-wrapper {
-  border: 1px solid #e0e0e0;
-  border-radius: 5px;
-  overflow: hidden;
+/* Primary button */
+.pdf-button-primary {
+  background-color: #2196F3;
+}
+
+/* Success button */
+.pdf-button-success {
+  background-color: #4CAF50;
+}
+
+/* Modified indicator */
+.pdf-modified-indicator {
+  padding: 0.5rem 1rem;
+  background-color: #FF9800;
+  color: white;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+/* Loading indicator */
+.pdf-loading {
+  color: #3498db;
+  margin: 1rem 0;
+}
+
+/* PDF viewer container */
+.pdf-viewer-container {
+  position: relative;
+  margin: 0 auto;
+  border: 1px solid #ddd;
+  background-color: #f9f9f9;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.toolbar {
-  background-color: #f5f5f5;
-  padding: 10px 15px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.toolbar button {
-  padding: 6px 12px;
-  background-color: #ffffff;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.toolbar button:hover {
-  background-color: #f0f0f0;
-  border-color: #b0b0b0;
-}
-
-.toolbar button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.zoom-controls, .page-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-left: auto;
-}
-
-.zoom-controls button {
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.page-controls {
-  background-color: #ffffff;
-  padding: 5px 10px;
-  border-radius: 4px;
-  border: 1px solid #d0d0d0;
-}
-
-.document-area {
-  background-color: #525659;
-  padding: 20px;
-  display: flex;
-  justify-content: center;
-  min-height: 600px;
-}
-
-.pdf-page {
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  background-color: white;
-  position: relative;
-}
-
-.loading {
-  padding: 20px;
-  text-align: center;
-  color: #666666;
-  font-size: 16px;
-}
-
-/* Text layer styling for editing */
-.textLayer {
+/* PDF canvas */
+.pdf-canvas {
   position: absolute;
-  left: 0;
   top: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  opacity: 1;
-  line-height: 1;
-}
-
-.textLayer span {
-  color: transparent;
-  position: absolute;
-  white-space: pre;
-  cursor: text;
-  transform-origin: 0% 0%;
-}
-
-.editing-mode .textLayer span {
-  background-color: rgba(255, 255, 0, 0.2);
-  border-radius: 2px;
-}
-
-.editable-text {
-  background-color: rgba(255, 255, 0, 0.3) !important;
-  outline: 1px dashed rgba(0, 0, 0, 0.3);
-  cursor: text;
-  color: #000 !important;
-  padding: 0 1px;
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-}
-
-/* Fix for PDF.js text layer */
-.react-pdf__Page__textContent {
-  opacity: 1 !important;
-}
-
-.react-pdf__Page__textContent span {
-  opacity: 1 !important;
-  color: transparent !important;
-  position: absolute;
-  white-space: pre;
-  cursor: text;
-  transform-origin: 0% 0%;
-}
-
-.react-pdf__Page__textContent span::selection {
-  background: rgba(0, 0, 255, 0.3);
-}
-
-.pdf-page.editing-mode .textLayer span {
-  color: transparent;
-}
-
-.pdf-wrapper {
-  position: relative;
-  display: inline-block;
-  margin-top: 20px;
-}
-
-canvas {
-  border: 1px solid #ccc;
-}
-
-.text-box {
-  position: absolute;
-  width: 100%;
   left: 0;
-  min-height: 20px;
-  padding: 2px 8px;
-  border: none;
-  background-color: rgba(255, 255, 255, 0.5);
-  cursor: text;
-  font-size: 14px;
-  font-family: Arial, sans-serif;
-  outline: none;
-  white-space: pre-wrap;
-  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: none;
 }
 
+/* Editable text element */
+.pdf-editable-text {
+  position: absolute;
+  color: #000;
+  font-family: sans-serif;
+  white-space: pre;
+  line-height: 1;
+  padding: 2px;
+  outline: none;
+  cursor: text;
+  z-index: 10;
+  transition: all 0.1s ease;
+}
 
+.pdf-editable-text:hover {
+  background-color: rgba(255, 255, 0, 0.2);
+}
 
+/* Selected text element */
+.pdf-editable-text-selected {
+  background-color: rgba(255, 255, 0, 0.3);
+  border: 1px dashed #0066ff !important;
+}
+
+/* Modified text element */
+.pdf-editable-text-modified {
+  background-color: rgba(0, 255, 0, 0.1);
+  border: 1px solid #00aa00;
+}
